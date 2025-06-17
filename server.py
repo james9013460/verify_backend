@@ -1,9 +1,27 @@
 import os
 from http.server import BaseHTTPRequestHandler, HTTPServer
+from urllib.parse import urlparse, parse_qs
 
 class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
+    
+    def get_echo_str(self):
+        parsed_url = urlparse(self.path)
+        query_params = parse_qs(parsed_url.query)
+        echostr = query_params.get('echostr', [None])[0]
+        print("echostr = " + str(echostr))
+        return echostr
+
     def do_GET(self):
         self.print_request_details()
+        echostr = self.get_echo_str()
+        if (echostr):
+            print("SEND BACK")
+            self.send_response(200)
+            self.send_header("Content-type", "text/plain")
+            self.end_headers()
+            self.wfile.write(echostr.encode())
+            return
+
         self.send_response(200)
         self.end_headers()
         self.wfile.write(b'Hello, GET request received!')
@@ -16,6 +34,7 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
         self.send_response(200)
         self.end_headers()
         self.wfile.write(b'Hello, POST request received!')
+
 
     def print_request_details(self):
         print(f"Incoming {self.command} request")
